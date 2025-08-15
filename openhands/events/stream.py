@@ -148,6 +148,8 @@ class EventStream(EventStore):
         self._subscribers[subscriber_id][callback_id] = callback
         self._thread_pools[subscriber_id][callback_id] = pool
 
+        logger.info(f"Subscribed: {subscriber_id} - {callback_id}")
+
     def unsubscribe(
         self, subscriber_id: EventStreamSubscriber, callback_id: str
     ) -> None:
@@ -160,6 +162,8 @@ class EventStream(EventStore):
             return
 
         self._clean_up_subscriber(subscriber_id, callback_id)
+
+        logger.info(f"Unsubscribed: {subscriber_id} - {callback_id}")
 
     def add_event(self, event: Event, source: EventSource) -> None:
         if event.id != Event.INVALID_ID:
@@ -202,6 +206,8 @@ class EventStream(EventStore):
             # Store the cache page last - if it is not present during reads then it will simply be bypassed.
             self._store_cache_page(current_write_page)
         self._queue.put(event)
+
+        logger.info(f"Event add, event: {event}, source: {source}")
 
     def _store_cache_page(self, current_write_page: list[dict]):
         """Store a page in the cache. Reading individual events is slow when there are a lot of them, so we use pages."""
