@@ -78,6 +78,7 @@ You'll find OpenHands running at [http://localhost:3000](http://localhost:3000) 
 
 You can also run OpenHands directly with Docker:
 
+#### Linux/macOS
 ```bash
 docker pull docker.all-hands.dev/all-hands-ai/runtime:0.52-nikolaik
 
@@ -91,6 +92,41 @@ docker run -it --rm --pull=always \
     --name openhands-app \
     docker.all-hands.dev/all-hands-ai/openhands:0.52
 ```
+
+#### Windows (PowerShell)
+```powershell
+docker pull docker.all-hands.dev/all-hands-ai/runtime:0.52-nikolaik
+
+docker run -it --rm --pull=always `
+    -e SANDBOX_RUNTIME_CONTAINER_IMAGE=docker.all-hands.dev/all-hands-ai/runtime:0.52-nikolaik `
+    -e LOG_ALL_EVENTS=true `
+    -v //var/run/docker.sock:/var/run/docker.sock `
+    -v ${env:USERPROFILE}/.openhands:/.openhands `
+    -p 3000:3000 `
+    --add-host host.docker.internal:host-gateway `
+    --name openhands-app `
+    docker.all-hands.dev/all-hands-ai/openhands:0.52
+```
+
+#### Windows (Command Prompt)
+```cmd
+docker pull docker.all-hands.dev/all-hands-ai/runtime:0.52-nikolaik
+
+docker run -it --rm --pull=always ^
+    -e SANDBOX_RUNTIME_CONTAINER_IMAGE=docker.all-hands.dev/all-hands-ai/runtime:0.52-nikolaik ^
+    -e LOG_ALL_EVENTS=true ^
+    -v //var/run/docker.sock:/var/run/docker.sock ^
+    -v %USERPROFILE%/.openhands:/.openhands ^
+    -p 3000:3000 ^
+    --add-host host.docker.internal:host-gateway ^
+    --name openhands-app ^
+    docker.all-hands.dev/all-hands-ai/openhands:0.52
+```
+
+> **Windows注意事项**:
+> - 确保Docker Desktop已安装并正在运行
+> - 如果使用WSL2，建议在WSL2环境中运行Linux命令
+> - 某些Windows版本可能需要调整Docker socket路径
 
 </details>
 
