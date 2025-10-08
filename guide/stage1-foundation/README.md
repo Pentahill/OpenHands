@@ -146,6 +146,11 @@ if __name__ == "__main__":
 用户输入 → Agent思考 → 执行Action → 获得Observation → 继续思考 → ...
 ```
 
+**深入学习资源：**
+- [Agent-Action-Observation模式详解](./agent-action-observation-pattern.md) - 完整的AAO模式解析
+- [模块依赖关系图](./module-dependency-diagrams.md) - 按应用场景分类的依赖图谱
+- [代码示例详解](./code-examples.md) - 完整的代码实现示例和最佳实践
+
 ### 事件驱动架构
 - **Event**: 系统中的基本单位
 - **Action**: Agent执行的操作
