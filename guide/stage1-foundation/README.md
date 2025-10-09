@@ -149,6 +149,7 @@ if __name__ == "__main__":
 **深入学习资源：**
 - [Agent-Action-Observation模式详解](./agent-action-observation-pattern.md) - 完整的AAO模式解析
 - [AAO通信架构详解](./aao-communication-architecture.md) - AgentController-Agent-Runtime通信机制
+- [状态管理深度分析](./state-management-analysis.md) - AgentController状态管理机制详解
 - [模块依赖关系图](./module-dependency-diagrams.md) - 按应用场景分类的依赖图谱
 - [代码示例详解](./code-examples.md) - 完整的代码实现示例和最佳实践
 
