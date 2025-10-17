@@ -24,6 +24,7 @@
 - [ ] 掌握事件存储和检索机制
 - [ ] 理解事件过滤和处理
 - [ ] 分析事件流的性能优化
+- [ ] 掌握 Pending Action 机制
 
 ### 第7-10天：运行时系统理解
 - [ ] 对比不同运行时的特点和适用场景
@@ -76,7 +77,19 @@ openhands/events/
 └── event_store.py          # 事件存储
 ```
 
-### 3. 运行时系统核心文件
+### 3. Agent Controller 核心文件
+```
+openhands/controller/
+├── agent_controller.py     # Agent 控制器主文件
+├── agent.py                # Agent 基类
+├── state/                  # 状态管理
+│   ├── state.py           # 状态定义
+│   └── state_tracker.py   # 状态跟踪器
+├── replay.py              # 重放管理器
+└── stuck.py               # 卡顿检测器
+```
+
+### 4. 运行时系统核心文件
 ```
 openhands/runtime/
 ├── base.py                  # 运行时基类
@@ -92,7 +105,7 @@ openhands/runtime/
     └── agent_skills/       # Agent技能插件
 ```
 
-### 4. MCP 系统核心文件
+### 5. MCP 系统核心文件
 ```
 openhands/mcp/
 ├── client.py               # MCP 客户端
@@ -269,7 +282,102 @@ class CustomRuntime(Runtime):
             raise ValueError(f"Unsupported action: {action.action}")
 ```
 
-### 项目4：MCP 工具集成开发
+### 项目4：Pending Action 机制分析
+分析并扩展 Agent Controller 的 pending_action 机制：
+
+```python
+# pending_action_analyzer.py
+from openhands.controller.agent_controller import AgentController
+from openhands.events.action import CmdRunAction
+from openhands.events.observation import CmdOutputObservation
+import time
+
+class PendingActionAnalyzer:
+    """Pending Action 机制分析器"""
+    
+    def __init__(self, controller: AgentController):
+        self.controller = controller
+        self.analysis_data = []
+    
+    def analyze_pending_action_lifecycle(self):
+        """分析 pending_action 的生命周期"""
+        lifecycle_data = {
+            'set_count': 0,
+            'clear_count': 0,
+            'total_duration': 0.0,
+            'max_duration': 0.0,
+            'timeout_count': 0
+        }
+        
+        # 模拟 pending_action 设置和清除
+        action = CmdRunAction(command='echo "test"')
+        
+        # 记录设置时间
+        start_time = time.time()
+        self.controller._pending_action = action
+        lifecycle_data['set_count'] += 1
+        
+        # 模拟执行过程
+        time.sleep(0.1)
+        
+        # 记录清除时间
+        self.controller._pending_action = None
+        lifecycle_data['clear_count'] += 1
+        
+        duration = time.time() - start_time
+        lifecycle_data['total_duration'] += duration
+        lifecycle_data['max_duration'] = max(lifecycle_data['max_duration'], duration)
+        
+        return lifecycle_data
+    
+    def analyze_state_transitions(self):
+        """分析状态转换对 pending_action 的影响"""
+        transitions = {
+            'RUNNING': ['AWAITING_USER_CONFIRMATION', 'STOPPED', 'ERROR'],
+            'AWAITING_USER_CONFIRMATION': ['USER_CONFIRMED', 'USER_REJECTED'],
+            'USER_CONFIRMED': ['RUNNING'],
+            'USER_REJECTED': ['AWAITING_USER_INPUT']
+        }
+        
+        analysis = {}
+        for from_state, to_states in transitions.items():
+            for to_state in to_states:
+                key = f"{from_state} -> {to_state}"
+                analysis[key] = self._analyze_transition_effect(from_state, to_state)
+        
+        return analysis
+    
+    def _analyze_transition_effect(self, from_state: str, to_state: str):
+        """分析特定状态转换对 pending_action 的影响"""
+        effects = {
+            'RUNNING -> AWAITING_USER_CONFIRMATION': '保持 pending_action，等待用户确认',
+            'RUNNING -> STOPPED': '清除 pending_action，创建错误观察',
+            'RUNNING -> ERROR': '清除 pending_action，创建错误观察',
+            'AWAITING_USER_CONFIRMATION -> USER_CONFIRMED': '清除 pending_action，继续执行',
+            'AWAITING_USER_CONFIRMATION -> USER_REJECTED': '清除 pending_action，等待用户输入',
+            'USER_CONFIRMED -> RUNNING': '无 pending_action，正常执行',
+            'USER_REJECTED -> AWAITING_USER_INPUT': '无 pending_action，等待用户输入'
+        }
+        
+        return effects.get(f"{from_state} -> {to_state}", '未知影响')
+```
+
+#### 使用分析器
+```python
+# 创建分析器实例
+analyzer = PendingActionAnalyzer(agent_controller)
+
+# 分析生命周期
+lifecycle_data = analyzer.analyze_pending_action_lifecycle()
+print(f"Pending Action 生命周期分析: {lifecycle_data}")
+
+# 分析状态转换
+state_analysis = analyzer.analyze_state_transitions()
+for transition, effect in state_analysis.items():
+    print(f"{transition}: {effect}")
+```
+
+### 项目5：MCP 工具集成开发
 创建一个自定义的 MCP 工具并集成到 OpenHands：
 
 ```python
@@ -334,6 +442,13 @@ response = await agent.run("查询纽约的天气")
 3. **状态管理**：Agent状态、对话状态、执行状态
 4. **错误处理**：异常捕获、错误恢复、降级策略
 
+### Pending Action 机制分析
+1. **动作执行控制**：防止并发执行，确保顺序性
+2. **状态同步**：动作与观察结果的正确匹配
+3. **用户确认流程**：管理需要用户确认的动作
+4. **错误恢复机制**：系统重置时的动作清理
+5. **生命周期跟踪**：时间戳记录和超时检测
+
 ### 事件系统分析
 1. **事件流设计**：事件产生、传播、处理、存储
 2. **序列化机制**：事件持久化、网络传输、版本兼容
@@ -369,6 +484,12 @@ response = await agent.run("查询纽约的天气")
 2. 如何平衡Agent的自主性和可控性？
 3. 如何处理Agent执行过程中的错误和异常？
 4. 如何优化Agent的决策速度和准确性？
+
+### Pending Action 机制问题
+1. 如何设计高效的 pending_action 生命周期管理？
+2. 如何处理长时间挂起的 pending_action？
+3. 如何确保 pending_action 在系统故障时的正确清理？
+4. 如何优化 pending_action 与观察结果的匹配机制？
 
 ### 事件系统问题
 1. 如何设计高效的事件存储和检索机制？
