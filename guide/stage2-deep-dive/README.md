@@ -44,6 +44,7 @@
 - [ ] 理解 LLM 集成和优化
 - [ ] 掌握并发和异步处理
 - [ ] 分析性能瓶颈和优化方案
+- [ ] 学习 MCP (Model Context Protocol) 集成
 - [ ] 准备进入下一阶段
 
 ## 📚 核心源码分析
@@ -83,9 +84,27 @@ openhands/runtime/
 │   ├── docker/             # Docker运行时
 │   ├── local/              # 本地运行时
 │   └── remote/             # 远程运行时
+├── mcp/                     # MCP 集成
+│   ├── proxy/              # MCP 代理
+│   └── config.json         # MCP 配置
 └── plugins/                 # 插件系统
     ├── jupyter/            # Jupyter插件
     └── agent_skills/       # Agent技能插件
+```
+
+### 4. MCP 系统核心文件
+```
+openhands/mcp/
+├── client.py               # MCP 客户端
+├── tool.py                 # MCP 工具定义
+├── utils.py                # MCP 工具函数
+├── error_collector.py      # MCP 错误收集器
+└── __init__.py
+
+openhands/server/routes/mcp.py  # MCP 服务器路由
+openhands/core/config/mcp_config.py  # MCP 配置管理
+openhands/events/action/mcp.py  # MCP Action
+openhands/events/observation/mcp.py  # MCP Observation
 ```
 
 ## 🛠️ 实践项目
@@ -250,6 +269,63 @@ class CustomRuntime(Runtime):
             raise ValueError(f"Unsupported action: {action.action}")
 ```
 
+### 项目4：MCP 工具集成开发
+创建一个自定义的 MCP 工具并集成到 OpenHands：
+
+```python
+# custom_mcp_tool.py
+from fastmcp import FastMCP
+from openhands.core.config.mcp_config import MCPStdioServerConfig
+
+# 创建 MCP 服务器
+mcp_server = FastMCP('custom-tools')
+
+@mcp_server.tool()
+async def weather_lookup(
+    city: str,
+    country: str = "US"
+) -> str:
+    """获取指定城市的天气信息"""
+    # 这里可以调用天气 API
+    return f"Weather in {city}, {country}: Sunny, 25°C"
+
+@mcp_server.tool()
+async def currency_converter(
+    amount: float,
+    from_currency: str,
+    to_currency: str
+) -> str:
+    """货币转换工具"""
+    # 这里可以调用汇率 API
+    converted_amount = amount * 0.85  # 示例汇率
+    return f"{amount} {from_currency} = {converted_amount:.2f} {to_currency}"
+
+# 配置到 OpenHands
+mcp_config = MCPConfig(
+    stdio_servers=[
+        MCPStdioServerConfig(
+            name="custom-tools",
+            command="python",
+            args=["custom_mcp_tool.py"],
+            env={"WEATHER_API_KEY": "your-api-key"}
+        )
+    ]
+)
+```
+
+#### 使用自定义 MCP 工具
+```python
+# 在代理中使用自定义 MCP 工具
+from openhands.mcp.utils import add_mcp_tools_to_agent
+
+# 添加 MCP 工具到代理
+mcp_config = await add_mcp_tools_to_agent(agent, runtime, memory)
+
+# 代理现在可以使用自定义工具
+response = await agent.run("查询纽约的天气")
+# 代理会自动调用 weather_lookup 工具
+```
+
 ## 🔍 深度分析要点
 
 ### Agent系统分析
@@ -269,6 +345,12 @@ class CustomRuntime(Runtime):
 2. **资源管理**：CPU限制、内存限制、磁盘配额
 3. **安全策略**：权限控制、沙箱机制、审计日志
 4. **可扩展性**：水平扩展、负载均衡、故障转移
+
+### MCP 系统分析
+1. **协议集成**：SSE、SHTTP、Stdio 传输协议支持
+2. **工具发现**：动态工具注册和发现机制
+3. **错误处理**：连接失败、工具调用错误的处理策略
+4. **性能优化**：连接池管理、超时控制、缓存机制
 
 ## 📊 学习进度跟踪
 
@@ -299,6 +381,12 @@ class CustomRuntime(Runtime):
 2. 如何设计支持多种环境的统一运行时接口？
 3. 如何处理运行时环境的故障和恢复？
 4. 如何优化资源利用率和响应速度？
+
+### MCP 系统问题
+1. 如何设计高效的 MCP 工具发现和注册机制？
+2. 如何处理 MCP 服务器连接失败和重连？
+3. 如何优化 MCP 工具调用的性能和可靠性？
+4. 如何设计安全的 MCP 工具权限控制机制？
 
 ## 🔧 调试和分析工具
 
