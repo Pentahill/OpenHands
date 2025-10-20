@@ -17,6 +17,7 @@
 - [ ] 学习工具系统的设计模式
 - [ ] 掌握函数调用机制
 - [ ] 研究提示工程技巧
+- [ ] 分析完整的执行流程
 
 ### 第4-6天：事件系统掌握
 - [ ] 深入理解 Action-Observation 模式
@@ -50,7 +51,16 @@
 
 ## 📚 核心源码分析
 
-### 1. Agent系统核心文件
+### 1. 执行流程核心文件
+```
+openhands/core/
+├── main.py                 # 程序入口和主执行流程
+├── setup.py                # 组件初始化
+├── loop.py                 # 事件循环
+└── schema.py               # 核心数据结构
+```
+
+### 2. Agent系统核心文件
 ```
 openhands/agenthub/codeact_agent/
 ├── codeact_agent.py          # 主Agent实现
@@ -62,7 +72,7 @@ openhands/agenthub/codeact_agent/
     └── browser.py           # 浏览器工具
 ```
 
-### 2. 事件系统核心文件
+### 3. 事件系统核心文件
 ```
 openhands/events/
 ├── event.py                 # 事件基类
@@ -77,7 +87,7 @@ openhands/events/
 └── event_store.py          # 事件存储
 ```
 
-### 3. Agent Controller 核心文件
+### 4. Agent Controller 核心文件
 ```
 openhands/controller/
 ├── agent_controller.py     # Agent 控制器主文件
@@ -89,7 +99,7 @@ openhands/controller/
 └── stuck.py               # 卡顿检测器
 ```
 
-### 4. 运行时系统核心文件
+### 5. 运行时系统核心文件
 ```
 openhands/runtime/
 ├── base.py                  # 运行时基类
@@ -105,7 +115,7 @@ openhands/runtime/
     └── agent_skills/       # Agent技能插件
 ```
 
-### 5. MCP 系统核心文件
+### 6. MCP 系统核心文件
 ```
 openhands/mcp/
 ├── client.py               # MCP 客户端
@@ -433,6 +443,15 @@ mcp_config = await add_mcp_tools_to_agent(agent, runtime, memory)
 response = await agent.run("查询纽约的天气")
 # 代理会自动调用 weather_lookup 工具
 ```
+
+## 📖 可用指南
+
+### 深入分析文档
+
+- [**Action 和 Observation 事件类分析**](./action_observation_analysis.md) - 深入理解事件系统的核心组件
+- [**MCP 集成指南**](./mcp.md) - 掌握 Model Context Protocol 的集成和使用
+- [**Pending Action 机制分析**](./pending_action_analysis.md) - 分析 Agent Controller 中的 pending_action 机制
+- [**CodeActAgent 执行流程分析**](./codeact_agent_execution_flow.md) - 从 main.py 入口分析完整的执行流程
 
 ## 🔍 深度分析要点
 
