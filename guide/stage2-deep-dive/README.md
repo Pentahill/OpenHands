@@ -452,6 +452,7 @@ response = await agent.run("查询纽约的天气")
 - [**MCP 集成指南**](./mcp.md) - 掌握 Model Context Protocol 的集成和使用
 - [**Pending Action 机制分析**](./pending_action_analysis.md) - 分析 Agent Controller 中的 pending_action 机制
 - [**CodeActAgent 执行流程分析**](./codeact_agent_execution_flow.md) - 从 main.py 入口分析完整的执行流程
+- [**CodeActAgent 实现原理分析**](./codeact_agent_implementation_analysis.md) - 深入分析 CodeActAgent 的架构设计和核心机制
 
 ## 🔍 深度分析要点
 
